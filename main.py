@@ -151,7 +151,7 @@ def show_result(unit_list, expand):
     for u in unit_list:
         if u.adaptation_degree >= expand:
             print u"第 %d 套" % u.id
-            print u"题目数量\t知识点分布\t难度系数\t适应度"
+            print u"题目数量\t知识点分布\t难度系数\t\t适应度"
             print str(u.problem_count) + "\t\t" + str(u.kp_coverage) + "\t\t" + \
                     str(u.difficulty) + "\t\t" + str(u.adaptation_degree) + "\n\n"
 
