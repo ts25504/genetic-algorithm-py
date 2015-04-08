@@ -195,6 +195,7 @@ def main():
         print u"难度：", maximum_unit.difficulty
         print u"知识点覆盖率：", maximum_unit.kp_coverage
         print u"在第 %d 代未得到结果" % count
+        print
         count = count + 1
         if (count > run_count):
             print u"失败，请重新设计条件"
