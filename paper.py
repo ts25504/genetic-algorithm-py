@@ -5,3 +5,5 @@ class Paper:
         self.difficulty = 0.00
         self.points = []
         self.each_type_count = []
+        self.each_type_score = []
+        self.each_point_score = []
