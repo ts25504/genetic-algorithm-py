@@ -6,8 +6,8 @@ from paper import Paper
 from problem import Problem
 from unit import Unit
 
-fkpcov = 0.5
-fdiff = 0.5
+fkpcov = 0.2
+fdiff = 0.8
 
 def is_contain(paper, problem):
     for i in range(len(problem.points)):
@@ -15,6 +15,7 @@ def is_contain(paper, problem):
             return True
     return False
 
+"""
 def get_kp_coverage(unit_list, paper):
     for i in range(len(unit_list)):
         kp = []
@@ -37,7 +38,7 @@ def get_kp_coverage(unit_list, paper):
                 - paper.each_point_score[i]) * 1.00 / paper.each_point_score[i])
         unit_list[i].kp_coverage = result * 1.00 / len(paper.points)
     return unit_list
-"""
+
 
 def get_adaptation_degree(unit_list, paper, fkpcov, fdiff):
     unit_list = get_kp_coverage(unit_list, paper)
@@ -61,9 +62,9 @@ def CSZQ(count, paper, problem_list):
                         p for p in problem_list \
                                 if p.type == j+1 and is_contain(p, paper)]
 
-                for k in range(1, each_type_count[j] + 1):
+                for k in range(0, each_type_count[j]):
                     length = len(one_type_problem)
-                    index = randint(0, length - k)
+                    index = randint(0, length - k - 1)
                     unit.problem_list.append(one_type_problem[index])
                     one_type_problem[index], one_type_problem[length-k-1] = \
                             one_type_problem[length-k-1], \
@@ -122,39 +123,65 @@ def cross(unit_list, count, paper):
                     crossed_unit_list.append(unit_new_one)
                 if len(crossed_unit_list) < count:
                     crossed_unit_list.append(unit_new_two)
+        crossed_unit_list = list(set(crossed_unit_list))
 
     crossed_unit_list = get_kp_coverage(crossed_unit_list, paper)
     crossed_unit_list = get_adaptation_degree(crossed_unit_list, paper,
             fkpcov, fdiff)
     return crossed_unit_list
 
+"""
 def change(unit_list, problem_list, paper):
     index = 0
     for u in unit_list:
-        index = randint(0, len(u.problem_list) - 1)
-        temp = u.problem_list[index]
+        p = random()
+        if p < 0.03:
+            index = randint(0, len(u.problem_list) - 1)
+            temp = u.problem_list[index]
 
-        problem = Problem()
-        for i in range(len(temp.points)):
-            if temp.points[i] in paper.points:
-                problem.points.append(temp.points[i])
+            problem = Problem()
+            for i in range(len(temp.points)):
+                if temp.points[i] in paper.points:
+                    problem.points.append(temp.points[i])
 
-        other_db = [
-                p for p in problem_list \
-                        if len(set(p.points).
-                            intersection(set(problem.points))) > 0]
-        small_db = [
-                p for p in other_db \
-                        if is_contain(paper, p) and p.score == temp.score \
-                        and p.type == temp.type and p.id != temp.id]
+            other_db = [
+                    p for p in problem_list \
+                            if len(set(p.points).
+                                intersection(set(problem.points))) > 0]
+            small_db = [
+                    p for p in other_db \
+                            if is_contain(paper, p) and p.score == temp.score \
+                            and p.type == temp.type and p.id != temp.id]
 
-        if len(small_db) > 0:
-            change_index = randint(0, len(small_db) - 1)
-            u.problem_list[index] = small_db[change_index]
+            if len(small_db) > 0:
+                change_index = randint(0, len(small_db) - 1)
+                u.problem_list[index] = small_db[change_index]
 
     unit_list = get_kp_coverage(unit_list, paper)
     unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
     return unit_list
+
+"""
+def change(unit_list, problem_list, paper):
+    index = 0
+    for u in unit_list:
+        p = random()
+        if p < 0.03:
+            index = randint(0, len(u.problem_list) - 1)
+            temp = u.problem_list[index]
+            problem = Problem()
+            small_db = [
+                    p for p in problem_list \
+                    if is_contain(paper, p) and p.score == temp.score \
+                    and p.type == temp.type and p.id != temp.id]
+            if len(small_db) > 0:
+                change_index = randint(0, len(small_db) - 1)
+                u.problem_list[index] = small_db[change_index]
+
+    unit_list = get_kp_coverage(unit_list, paper)
+    unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+    return unit_list
+
 
 def is_end(unit_list, end_condition):
     if unit_list is not None:
@@ -171,16 +198,42 @@ def show_result(unit_list, expand):
             print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
                     u.problem_count, u.kp_coverage,\
                             u.difficulty, u.adaptation_degree)
+            result_list = []
+            result_list += u.problem_list
+            result_list.sort(key=lambda x:x.points[0])
+            for p in result_list:
+                print p.id, p.points, p.score
 
 def show_unit(unit_list):
     for u in unit_list:
         print u"试卷编号\t知识点分布\t难度系数\t适应度"
         print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
                 u.id, u.kp_coverage, u.difficulty, u.adaptation_degree)
-        u.problem_list.sort(key=lambda x:x.id)
+
+def show_debug_info(unit_list):
+    for u in unit_list:
         for p in u.problem_list:
-            print str(p.id) + "\t",
-        print "\n"
+            print p.id,
+        print u.adaptation_degree
+    print
+
+def show_opt_unit(unit_list):
+    opt_unit = Unit()
+    for u in unit_list:
+        if opt_unit.adaptation_degree < u.adaptation_degree:
+            opt_unit.problem_list = []
+            opt_unit.adaptation_degree = u.adaptation_degree
+            opt_unit.difficulty = u.difficulty
+            opt_unit.kp_coverage = u.kp_coverage
+            opt_unit.problem_list += u.problem_list
+
+    print u"知识点覆盖率：", opt_unit.kp_coverage
+    print u"难度：", opt_unit.difficulty
+    print u"最大适应值：", opt_unit.adaptation_degree
+    opt_unit.problem_list.sort(key=lambda x:x.points[0])
+    for p in opt_unit.problem_list:
+        print p.id, p.points, p.score
+    print
 
 class Genetic:
     def __init__(self, paper, db):
@@ -200,9 +253,7 @@ class Genetic:
             if (is_end(unit_list, expand)):
                 break
 
-            p = random()
-            if p < 0.02:
-                unit_list = change(unit_list, self.db.problem_db, self.paper)
+            unit_list = change(unit_list, self.db.problem_db, self.paper)
 
         if (count <= run_count):
             for u in unit_list:
@@ -211,8 +262,8 @@ class Genetic:
 
     def test_run(self):
         count = 1
-        expand = 0.98
-        run_count = 500
+        expand = 0.90
+        run_count = 5000
 
         unit_list = CSZQ(20, self.paper, self.db.problem_db)
         print u"初始种群:"
@@ -220,19 +271,8 @@ class Genetic:
         print u"----------迭代开始-----------"
 
         while (not is_end(unit_list, expand)):
-            opt_unit = Unit()
-            for i in range(len(unit_list)):
-                if opt_unit.adaptation_degree < unit_list[i].adaptation_degree:
-                    opt_unit.adaptation_degree = unit_list[i].adaptation_degree
-                    opt_unit.difficulty = unit_list[i].difficulty
-                    opt_unit.kp_coverage = unit_list[i].kp_coverage
-
-            print u"知识点覆盖率：", opt_unit.kp_coverage
-            print u"难度：", opt_unit.difficulty
-            print u"最大适应值：", opt_unit.adaptation_degree
             print u"在第 %d 代未得到结果" % count
-            print
-
+            show_opt_unit(unit_list)
             count = count + 1
             if (count > run_count):
                 print u"失败，请重新设计条件"
@@ -244,13 +284,11 @@ class Genetic:
             if (is_end(unit_list, expand)):
                 break
 
-            p = random()
-            if p < 0.02:
-                unit_list = change(unit_list, self.db.problem_db, self.paper)
+            unit_list = change(unit_list, self.db.problem_db, self.paper)
 
         if (count <= run_count):
             print u"在第 %d 代得到结果" % count
-            print u"期望试卷难度" + str(self.paper.difficulty)
+            print u"期望试卷难度：" + str(self.paper.difficulty)
             show_result(unit_list, expand)
 
 def main():
@@ -258,7 +296,7 @@ def main():
 
     paper.id = 1
     paper.total_score = 100
-    paper.difficulty = 0.52
+    paper.difficulty = 0.62
     paper.points = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     paper.each_point_score = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
     paper.each_type_count = [15, 15, 5]
