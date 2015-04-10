@@ -114,9 +114,11 @@ def cross(unit_list, count, paper):
                 unit_new_one.problem_list += unit_one.problem_list
                 unit_new_two = Unit()
                 unit_new_two.problem_list += unit_two.problem_list
-                for i in range(cross_position, cross_position + 2):
-                    unit_new_one.problem_list[i] = unit_two.problem_list[i]
-                    unit_new_two.problem_list[i] = unit_one.problem_list[i]
+                p = random()
+                if p < 0.8:
+                    for i in range(cross_position, cross_position + 2):
+                        unit_new_one.problem_list[i] = unit_two.problem_list[i]
+                        unit_new_two.problem_list[i] = unit_one.problem_list[i]
                 unit_new_one.id = len(crossed_unit_list)
                 unit_new_two.id = unit_new_one.id + 1
                 if len(crossed_unit_list) < count:
@@ -135,7 +137,7 @@ def change(unit_list, problem_list, paper):
     index = 0
     for u in unit_list:
         p = random()
-        if p < 0.03:
+        if p < 0.1:
             index = randint(0, len(u.problem_list) - 1)
             temp = u.problem_list[index]
 
@@ -166,7 +168,7 @@ def change(unit_list, problem_list, paper):
     index = 0
     for u in unit_list:
         p = random()
-        if p < 0.03:
+        if p < 0.1:
             index = randint(0, len(u.problem_list) - 1)
             temp = u.problem_list[index]
             problem = Problem()
@@ -230,10 +232,12 @@ def show_opt_unit(unit_list):
     print u"知识点覆盖率：", opt_unit.kp_coverage
     print u"难度：", opt_unit.difficulty
     print u"最大适应值：", opt_unit.adaptation_degree
+    """
     opt_unit.problem_list.sort(key=lambda x:x.points[0])
     for p in opt_unit.problem_list:
         print p.id, p.points, p.score
     print
+    """
 
 class Genetic:
     def __init__(self, paper, db):
@@ -302,7 +306,8 @@ def main():
     paper.each_type_count = [15, 15, 5]
     paper.each_type_score = [30, 30, 40]
 
-    db = DB(paper)
+    db = DB()
+    db.generate_fake(paper)
     genetic = Genetic(paper, db)
     genetic.test_run()
 

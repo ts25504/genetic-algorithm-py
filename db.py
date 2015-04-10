@@ -3,9 +3,8 @@ from problem import Problem
 from paper import Paper
 
 class DB:
-    def __init__(self, paper):
+    def __init__(self):
         self.problem_db = []
-        self.generate_fake(paper)
 
     def generate_fake(self, paper):
         for i in range(3000):
