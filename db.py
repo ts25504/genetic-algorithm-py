@@ -31,9 +31,5 @@ class DB:
             model.points = points
             self.problem_db.append(model)
 
-    def create_from_problem_list(self, problem_list, paper):
-        for i in range(len(problem_list)):
-            problem_list[i].score = \
-                    paper.each_type_score[problem_list[i].type-1] / \
-                    paper.each_type_count[problem_list[i].type-1]
+    def create_from_problem_list(self, problem_list):
         self.problem_db = problem_list

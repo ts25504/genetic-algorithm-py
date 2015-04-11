@@ -262,7 +262,7 @@ class Genetic:
     def run(self, expand):
         count = 1
         run_count = 500
-        unit_list = CSZQ(poplulation_num, self.paper, self.db.problem_db)
+        unit_list = CSZQ(population_num, self.paper, self.db.problem_db)
         while (not is_end(unit_list, expand)):
             count = count + 1
             if (count > run_count):
@@ -275,6 +275,9 @@ class Genetic:
             unit_list = change(unit_list, self.db.problem_db, self.paper)
 
         if (count <= run_count):
+            print u"在第 %d 代得到结果" % count
+            print u"期望试卷难度：" + str(self.paper.difficulty)
+            show_result(unit_list, expand)
             for u in unit_list:
                 if u.adaptation_degree >= expand:
                     return u
