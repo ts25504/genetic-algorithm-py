@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import time
 from random import randint, random
 from db import DB
 from paper import Paper
 from problem import Problem
 from unit import Unit
 
-fkpcov = 0.2
-fdiff = 0.8
+fkpcov = 0.3
+fdiff = 0.7
+population_num = 100
+select_num = 30
 
 def is_contain(paper, problem):
     for i in range(len(problem.points)):
@@ -76,7 +79,7 @@ def CSZQ(count, paper, problem_list):
     unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
     return unit_list
 
-def select(unit_list, count):
+def roulette(unit_list, count):
     selected_unit_list = []
     all_adaptation_degree = 0
     for u in unit_list:
@@ -92,6 +95,18 @@ def select(unit_list, count):
                 if not unit_list[j] in selected_unit_list:
                     selected_unit_list.append(unit_list[j])
                 break
+    return selected_unit_list
+
+def pick_best(unit_list):
+    best_unit = Unit()
+    for u in unit_list:
+        if u.adaptation_degree > best_unit.adaptation_degree:
+            best_unit = u
+    return best_unit
+
+def select(unit_list, count):
+    selected_unit_list = []
+    selected_unit_list += roulette(unit_list, count)
     return selected_unit_list
 
 def cross(unit_list, count, paper):
@@ -247,13 +262,13 @@ class Genetic:
     def run(self, expand):
         count = 1
         run_count = 500
-        unit_list = CSZQ(20, self.paper, self.db.problem_db)
+        unit_list = CSZQ(poplulation_num, self.paper, self.db.problem_db)
         while (not is_end(unit_list, expand)):
             count = count + 1
             if (count > run_count):
                 break
-            unit_list = select(unit_list, 10)
-            unit_list = cross(unit_list, 20, self.paper)
+            unit_list = select(unit_list, select_num)
+            unit_list = cross(unit_list, population_num, self.paper)
             if (is_end(unit_list, expand)):
                 break
 
@@ -267,40 +282,43 @@ class Genetic:
     def test_run(self):
         count = 1
         expand = 0.90
-        run_count = 5000
+        run_count = 500
 
-        unit_list = CSZQ(20, self.paper, self.db.problem_db)
-        print u"初始种群:"
-        show_unit(unit_list)
-        print u"----------迭代开始-----------"
+        while True:
+            count = 1
+            unit_list = CSZQ(population_num, self.paper, self.db.problem_db)
+            print u"初始种群:"
+            show_unit(unit_list)
+            print u"----------迭代开始-----------"
 
-        while (not is_end(unit_list, expand)):
-            print u"在第 %d 代未得到结果" % count
-            show_opt_unit(unit_list)
-            count = count + 1
-            if (count > run_count):
-                print u"失败，请重新设计条件"
+            while (not is_end(unit_list, expand)):
+                print u"在第 %d 代未得到结果" % count
+                show_opt_unit(unit_list)
+                count = count + 1
+                if (count > run_count):
+                    print u"失败，请重新设计条件"
+                    break
+
+                unit_list = select(unit_list, select_num)
+                unit_list = cross(unit_list, population_num, self.paper)
+
+                if (is_end(unit_list, expand)):
+                    break
+
+                unit_list = change(unit_list, self.db.problem_db, self.paper)
+
+            if (count <= run_count):
+                print u"在第 %d 代得到结果" % count
+                print u"期望试卷难度：" + str(self.paper.difficulty)
+                show_result(unit_list, expand)
                 break
-
-            unit_list = select(unit_list, 10)
-            unit_list = cross(unit_list, 20, self.paper)
-
-            if (is_end(unit_list, expand)):
-                break
-
-            unit_list = change(unit_list, self.db.problem_db, self.paper)
-
-        if (count <= run_count):
-            print u"在第 %d 代得到结果" % count
-            print u"期望试卷难度：" + str(self.paper.difficulty)
-            show_result(unit_list, expand)
 
 def main():
     paper = Paper()
 
     paper.id = 1
     paper.total_score = 100
-    paper.difficulty = 0.62
+    paper.difficulty = 0.72
     paper.points = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     paper.each_point_score = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
     paper.each_type_count = [15, 15, 5]
@@ -309,7 +327,10 @@ def main():
     db = DB()
     db.generate_fake(paper)
     genetic = Genetic(paper, db)
+    start = time.clock()
     genetic.test_run()
+    end = time.clock()
+    print u"总共用时：", end - start, " 秒"
 
 
 if __name__ == '__main__':
