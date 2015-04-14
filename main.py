@@ -7,8 +7,8 @@ from paper import Paper
 from problem import Problem
 from unit import Unit
 
-fkpcov = 0.3
-fdiff = 0.7
+fkpcov = 0.5
+fdiff = 0.5
 population_num = 100
 select_num = 30
 
@@ -18,17 +18,6 @@ def is_contain(paper, problem):
             return True
     return False
 
-"""
-def get_kp_coverage(unit_list, paper):
-    for i in range(len(unit_list)):
-        kp = []
-        for p in unit_list[i].problem_list:
-            kp += p.points
-        common = list(set(kp).intersection(set(paper.points)))
-        unit_list[i].kp_coverage = len(common) * 1.00 / len(paper.points)
-    return unit_list
-
-"""
 def get_kp_coverage(unit_list, paper):
     for i in range(len(unit_list)):
         each_point_score = [0] * 11
@@ -36,9 +25,9 @@ def get_kp_coverage(unit_list, paper):
             for point in p.points:
                 each_point_score[point] += p.score
         result = 0
-        for i in range(len(paper.points)):
-            result += (1 - abs(each_point_score[paper.points[i]]
-                - paper.each_point_score[i]) * 1.00 / paper.each_point_score[i])
+        for j in range(len(paper.points)):
+            result += (1 - abs(each_point_score[paper.points[j]]
+                - paper.each_point_score[j]) * 1.00 / paper.each_point_score[j])
         unit_list[i].kp_coverage = result * 1.00 / len(paper.points)
     return unit_list
 
@@ -106,7 +95,8 @@ def pick_best(unit_list):
 
 def select(unit_list, count):
     selected_unit_list = []
-    selected_unit_list += roulette(unit_list, count)
+    selected_unit_list += roulette(unit_list, count - 1)
+    selected_unit_list.append(pick_best(unit_list))
     return selected_unit_list
 
 def cross(unit_list, count, paper):
@@ -147,38 +137,6 @@ def cross(unit_list, count, paper):
             fkpcov, fdiff)
     return crossed_unit_list
 
-"""
-def change(unit_list, problem_list, paper):
-    index = 0
-    for u in unit_list:
-        p = random()
-        if p < 0.1:
-            index = randint(0, len(u.problem_list) - 1)
-            temp = u.problem_list[index]
-
-            problem = Problem()
-            for i in range(len(temp.points)):
-                if temp.points[i] in paper.points:
-                    problem.points.append(temp.points[i])
-
-            other_db = [
-                    p for p in problem_list \
-                            if len(set(p.points).
-                                intersection(set(problem.points))) > 0]
-            small_db = [
-                    p for p in other_db \
-                            if is_contain(paper, p) and p.score == temp.score \
-                            and p.type == temp.type and p.id != temp.id]
-
-            if len(small_db) > 0:
-                change_index = randint(0, len(small_db) - 1)
-                u.problem_list[index] = small_db[change_index]
-
-    unit_list = get_kp_coverage(unit_list, paper)
-    unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
-    return unit_list
-
-"""
 def change(unit_list, problem_list, paper):
     index = 0
     for u in unit_list:
@@ -247,12 +205,6 @@ def show_opt_unit(unit_list):
     print u"知识点覆盖率：", opt_unit.kp_coverage
     print u"难度：", opt_unit.difficulty
     print u"最大适应值：", opt_unit.adaptation_degree
-    """
-    opt_unit.problem_list.sort(key=lambda x:x.points[0])
-    for p in opt_unit.problem_list:
-        print p.id, p.points, p.score
-    print
-    """
 
 class Genetic:
     def __init__(self, paper, db):
@@ -284,7 +236,7 @@ class Genetic:
 
     def test_run(self):
         count = 1
-        expand = 0.90
+        expand = 0.98
         run_count = 500
 
         while True:
