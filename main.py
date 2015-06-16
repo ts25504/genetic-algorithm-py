@@ -176,8 +176,8 @@ def show_result(unit_list, expand):
             result_list = []
             result_list += u.problem_list
             result_list.sort(key=lambda x:x.points[0])
-            for p in result_list:
-                print p.id, p.points, p.score
+            # for p in result_list:
+            #     print p.id, p.points, p.score
 
 def show_unit(unit_list):
     for u in unit_list:
@@ -197,14 +197,23 @@ def show_opt_unit(unit_list):
     for u in unit_list:
         if opt_unit.adaptation_degree < u.adaptation_degree:
             opt_unit.problem_list = []
+            opt_unit.id = u.id
             opt_unit.adaptation_degree = u.adaptation_degree
             opt_unit.difficulty = u.difficulty
             opt_unit.kp_coverage = u.kp_coverage
             opt_unit.problem_list += u.problem_list
 
+    print u"第 %d 套" % opt_unit.id
+    print u"题目数量\t知识点分布\t难度系数\t适应度"
+    print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
+            opt_unit.problem_count, opt_unit.kp_coverage,\
+                    opt_unit.difficulty, opt_unit.adaptation_degree)
+    print
+    """
     print u"知识点覆盖率：", opt_unit.kp_coverage
     print u"难度：", opt_unit.difficulty
     print u"最大适应值：", opt_unit.adaptation_degree
+    """
 
 class Genetic:
     def __init__(self, paper, db):
@@ -225,6 +234,8 @@ class Genetic:
                 break
 
             unit_list = change(unit_list, self.db.problem_db, self.paper)
+            print u"第 %d 代：" % (count-1)
+            show_opt_unit(unit_list)
 
         if (count <= run_count):
             print u"在第 %d 代得到结果" % count
