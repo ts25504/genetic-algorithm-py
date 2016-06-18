@@ -1,2 +1,2 @@
-# genetic_algorithm
-A genetic algorithm demo for test paper auto-generation.
+# Genetic Algorithm
+遗传算法自动组卷策略的Python实现
