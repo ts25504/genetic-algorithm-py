@@ -1,2 +1,2 @@
 # Genetic Algorithm
-遗传算法自动组卷策略的Python实现
+基于遗传算法自动组卷策略的Python实现
