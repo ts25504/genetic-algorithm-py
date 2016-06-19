@@ -5,4 +5,3 @@ class Problem:
         self.score = 0
         self.difficulty = 0.00
         self.points = []
-
