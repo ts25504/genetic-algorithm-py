@@ -12,7 +12,7 @@ population_num = 100
 select_num = 30
 
 
-def is_contain(paper, problem):
+def is_contain_points(paper, problem):
     for i in range(len(problem.points)):
         if problem.points[i] in paper.points:
             return True
@@ -22,7 +22,7 @@ def is_contain(paper, problem):
 
 def get_kp_coverage(unit_list, paper):
     for i in range(len(unit_list)):
-        each_point_score = [0] * 11
+        each_point_score = [0] * (len(paper.points) + 1)
         for p in unit_list[i].problem_list:
             for point in p.points:
                 each_point_score[point] += p.score
@@ -50,7 +50,7 @@ def get_adaptation_degree(unit_list, paper, fkpcov, fdiff):
     return unit_list
 
 
-def CSZQ(count, paper, problem_list):
+def initial_population(count, paper, problem_list):
     unit_list = []
     each_type_count = paper.each_type_count
     for i in range(count):
@@ -62,7 +62,7 @@ def CSZQ(count, paper, problem_list):
             for j in range(len(each_type_count)):
                 one_type_problem = [
                     p for p in problem_list
-                    if p.type == j+1 and is_contain(p, paper)]
+                    if p.type == j+1 and is_contain_points(p, paper)]
 
                 for k in range(0, each_type_count[j]):
                     length = len(one_type_problem)
@@ -129,6 +129,7 @@ def cross(unit_list, count, paper):
                 unit_one.problem_list[cross_position+1].score
             score_two = unit_two.problem_list[cross_position].score + \
                 unit_two.problem_list[cross_position+1].score
+
             if score_one == score_two:
                 unit_new_one = Unit()
                 unit_new_one.problem_list += unit_one.problem_list
@@ -139,12 +140,15 @@ def cross(unit_list, count, paper):
                     for i in range(cross_position, cross_position + 2):
                         unit_new_one.problem_list[i] = unit_two.problem_list[i]
                         unit_new_two.problem_list[i] = unit_one.problem_list[i]
+
                 unit_new_one.id = len(crossed_unit_list)
                 unit_new_two.id = unit_new_one.id + 1
                 if len(crossed_unit_list) < count:
                     crossed_unit_list.append(unit_new_one)
+
                 if len(crossed_unit_list) < count:
                     crossed_unit_list.append(unit_new_two)
+
         crossed_unit_list = list(set(crossed_unit_list))
 
     crossed_unit_list = get_kp_coverage(crossed_unit_list, paper)
@@ -162,8 +166,9 @@ def change(unit_list, problem_list, paper):
             temp = u.problem_list[index]
             small_db = [
                 prob for prob in problem_list
-                if is_contain(paper, prob) and prob.score == temp.score
+                if is_contain_points(paper, prob) and prob.score == temp.score
                 and prob.type == temp.type and prob.id != temp.id]
+
             if len(small_db) > 0:
                 change_index = randint(0, len(small_db) - 1)
                 u.problem_list[index] = small_db[change_index]
@@ -243,7 +248,10 @@ class Genetic:
     def run(self, expand):
         count = 1
         run_count = 500
-        unit_list = CSZQ(population_num, self.paper, self.db.problem_db)
+        unit_list = initial_population(population_num,
+                                       self.paper,
+                                       self.db.problem_db)
+
         while (not is_end(unit_list, expand)):
             count = count + 1
             if (count > run_count):
@@ -272,7 +280,10 @@ class Genetic:
 
         while True:
             count = 1
-            unit_list = CSZQ(population_num, self.paper, self.db.problem_db)
+            unit_list = initial_population(population_num,
+                                           self.paper,
+                                           self.db.problem_db)
+
             print u"初始种群:"
             show_unit(unit_list)
             print u"----------迭代开始-----------"
