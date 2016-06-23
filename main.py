@@ -22,7 +22,7 @@ def is_contain_points(paper, problem):
 
 def get_kp_coverage(unit_list, paper):
     for i in range(len(unit_list)):
-        each_point_score = [0] * (len(paper.points) + 1)
+        each_point_score = [0] * 100
         for p in unit_list[i].problem_list:
             for point in p.points:
                 each_point_score[point] += p.score
