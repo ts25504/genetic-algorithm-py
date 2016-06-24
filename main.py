@@ -20,7 +20,7 @@ def is_contain_points(paper, problem):
     return False
 
 
-def get_kp_coverage(unit_list, paper):
+def set_kp_coverage(unit_list, paper):
     for i in range(len(unit_list)):
         each_point_score = [0] * 100
         for p in unit_list[i].problem_list:
@@ -40,8 +40,8 @@ def get_kp_coverage(unit_list, paper):
     return unit_list
 
 
-def get_adaptation_degree(unit_list, paper, fkpcov, fdiff):
-    unit_list = get_kp_coverage(unit_list, paper)
+def set_adaptation_degree(unit_list, paper, fkpcov, fdiff):
+    set_kp_coverage(unit_list, paper)
     for i in range(len(unit_list)):
         unit_list[i].adaptation_degree = 1 - (1 - unit_list[i].kp_coverage) \
                 * fkpcov - abs(unit_list[i].difficulty - paper.difficulty) \
@@ -50,32 +50,44 @@ def get_adaptation_degree(unit_list, paper, fkpcov, fdiff):
     return unit_list
 
 
-def initial_population(count, paper, problem_list):
-    unit_list = []
+def generate_one_unit(i, paper, problem_list):
+    unit = Unit()
+    unit.id = i + 1
+
     each_type_count = paper.each_type_count
+    print problem_list
+    while paper.total_score != unit.sum_score:
+        unit.problem_list = []
+        for j in range(len(each_type_count)):
+            one_type_problem = [
+                p for p in problem_list
+                if p.type == j+1 and is_contain_points(p, paper)]
+
+            for k in range(0, each_type_count[j]):
+                length = len(one_type_problem)
+                index = randint(0, length - k - 1)
+                unit.problem_list.append(one_type_problem[index])
+                one_type_problem[index], one_type_problem[length-k-1] = \
+                    one_type_problem[length-k-1], \
+                    one_type_problem[index]
+
+    return unit
+
+
+def generate_unit_list(count, paper, problem_list):
+    unit_list = []
     for i in range(count):
-        unit = Unit()
-        unit.id = i + 1
-
-        while paper.total_score != unit.sum_score:
-            unit.problem_list = []
-            for j in range(len(each_type_count)):
-                one_type_problem = [
-                    p for p in problem_list
-                    if p.type == j+1 and is_contain_points(p, paper)]
-
-                for k in range(0, each_type_count[j]):
-                    length = len(one_type_problem)
-                    index = randint(0, length - k - 1)
-                    unit.problem_list.append(one_type_problem[index])
-                    one_type_problem[index], one_type_problem[length-k-1] = \
-                        one_type_problem[length-k-1], \
-                        one_type_problem[index]
-
+        unit = generate_one_unit(i, paper, problem_list)
         unit_list.append(unit)
 
-    unit_list = get_kp_coverage(unit_list, paper)
-    unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+    return unit_list
+
+
+def initial_population(count, paper, problem_list):
+    unit_list = generate_unit_list(count, paper, problem_list)
+    set_kp_coverage(unit_list, paper)
+    set_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+
     return unit_list
 
 
@@ -96,14 +108,12 @@ def roulette(unit_list, count):
                     selected_unit_list.append(unit_list[j])
 
                 break
+
     return selected_unit_list
 
 
 def pick_best(unit_list):
-    best_unit = Unit()
-    for u in unit_list:
-        if u.adaptation_degree > best_unit.adaptation_degree:
-            best_unit = u
+    best_unit = max(unit_list, key=lambda u: u.adaptation_degree)
     return best_unit
 
 
@@ -119,41 +129,40 @@ def cross(unit_list, count, paper):
     while (len(crossed_unit_list) != count):
         index_one = randint(0, len(unit_list) - 1)
         index_two = randint(0, len(unit_list) - 1)
-        unit_one = Unit()
-        unit_two = Unit()
-        if index_one != index_two:
-            unit_one = unit_list[index_one]
-            unit_two = unit_list[index_two]
-            cross_position = randint(0, unit_one.problem_count - 2)
-            score_one = unit_one.problem_list[cross_position].score + \
-                unit_one.problem_list[cross_position+1].score
-            score_two = unit_two.problem_list[cross_position].score + \
-                unit_two.problem_list[cross_position+1].score
+        if index_one == index_two:
+            continue
 
-            if score_one == score_two:
-                unit_new_one = Unit()
-                unit_new_one.problem_list += unit_one.problem_list
-                unit_new_two = Unit()
-                unit_new_two.problem_list += unit_two.problem_list
-                p = random()
-                if p < 0.8:
-                    for i in range(cross_position, cross_position + 2):
-                        unit_new_one.problem_list[i] = unit_two.problem_list[i]
-                        unit_new_two.problem_list[i] = unit_one.problem_list[i]
+        unit_one = unit_list[index_one]
+        unit_two = unit_list[index_two]
+        cross_position = randint(0, unit_one.problem_count - 2)
+        score_one = unit_one.problem_list[cross_position].score + \
+            unit_one.problem_list[cross_position+1].score
+        score_two = unit_two.problem_list[cross_position].score + \
+            unit_two.problem_list[cross_position+1].score
 
-                unit_new_one.id = len(crossed_unit_list)
-                unit_new_two.id = unit_new_one.id + 1
-                if len(crossed_unit_list) < count:
-                    crossed_unit_list.append(unit_new_one)
+        if score_one == score_two:
+            unit_new_one = Unit()
+            unit_new_one.problem_list += unit_one.problem_list
+            unit_new_two = Unit()
+            unit_new_two.problem_list += unit_two.problem_list
+            p = random()
+            if p < 0.8:
+                for i in range(cross_position, cross_position + 2):
+                    unit_new_one.problem_list[i] = unit_two.problem_list[i]
+                    unit_new_two.problem_list[i] = unit_one.problem_list[i]
 
-                if len(crossed_unit_list) < count:
-                    crossed_unit_list.append(unit_new_two)
+            unit_new_one.id = len(crossed_unit_list)
+            unit_new_two.id = unit_new_one.id + 1
+            if len(crossed_unit_list) < count:
+                crossed_unit_list.append(unit_new_one)
+
+            if len(crossed_unit_list) < count:
+                crossed_unit_list.append(unit_new_two)
 
         crossed_unit_list = list(set(crossed_unit_list))
 
-    crossed_unit_list = get_kp_coverage(crossed_unit_list, paper)
-    crossed_unit_list = get_adaptation_degree(crossed_unit_list, paper,
-                                              fkpcov, fdiff)
+    set_kp_coverage(crossed_unit_list, paper)
+    set_adaptation_degree(crossed_unit_list, paper, fkpcov, fdiff)
     return crossed_unit_list
 
 
@@ -173,8 +182,8 @@ def change(unit_list, problem_list, paper):
                 change_index = randint(0, len(small_db) - 1)
                 u.problem_list[index] = small_db[change_index]
 
-    unit_list = get_kp_coverage(unit_list, paper)
-    unit_list = get_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+    set_kp_coverage(unit_list, paper)
+    set_adaptation_degree(unit_list, paper, fkpcov, fdiff)
     return unit_list
 
 
@@ -183,22 +192,18 @@ def is_end(unit_list, end_condition):
         for i in range(len(unit_list)):
             if (unit_list[i].adaptation_degree >= end_condition):
                 return True
+
     return False
 
 
 def show_result(unit_list, expand):
-    for u in unit_list:
-        if u.adaptation_degree >= expand:
-            print u"第 %d 套" % u.id
-            print u"题目数量\t知识点分布\t难度系数\t适应度"
-            print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
-                u.problem_count, u.kp_coverage,
-                u.difficulty, u.adaptation_degree)
-            result_list = []
-            result_list += u.problem_list
-            result_list.sort(key=lambda x: x.points[0])
-            # for p in result_list:
-            #     print p.id, p.points, p.score
+    result = [u for u in unit_list if u.adaptation_degree >= expand]
+    for u in result:
+        print u"第 %d 套" % u.id
+        print u"题目数量\t知识点分布\t难度系数\t适应度"
+        print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
+            u.problem_count, u.kp_coverage,
+            u.difficulty, u.adaptation_degree)
 
 
 def show_unit(unit_list):
@@ -208,24 +213,9 @@ def show_unit(unit_list):
                 u.id, u.kp_coverage, u.difficulty, u.adaptation_degree)
 
 
-def show_debug_info(unit_list):
-    for u in unit_list:
-        for p in u.problem_list:
-            print p.id,
-        print u.adaptation_degree
-    print
-
 
 def show_opt_unit(unit_list):
-    opt_unit = Unit()
-    for u in unit_list:
-        if opt_unit.adaptation_degree < u.adaptation_degree:
-            opt_unit.problem_list = []
-            opt_unit.id = u.id
-            opt_unit.adaptation_degree = u.adaptation_degree
-            opt_unit.difficulty = u.difficulty
-            opt_unit.kp_coverage = u.kp_coverage
-            opt_unit.problem_list += u.problem_list
+    opt_unit = max(unit_list, key=lambda u: u.adaptation_degree)
 
     print u"第 %d 套" % opt_unit.id
     print u"题目数量\t知识点分布\t难度系数\t适应度"
