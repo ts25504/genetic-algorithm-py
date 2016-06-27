@@ -13,6 +13,10 @@ select_num = 30
 
 
 def is_contain_points(paper, problem):
+    """
+    返回试题包含的知识点是否在试卷要求的知识点中
+    """
+
     for i in range(len(problem.points)):
         if problem.points[i] in paper.points:
             return True
@@ -21,6 +25,10 @@ def is_contain_points(paper, problem):
 
 
 def set_kp_coverage(unit_list, paper):
+    """
+    计算知识点覆盖率
+    """
+
     for i in range(len(unit_list)):
         each_point_score = [0] * 100
         for p in unit_list[i].problem_list:
@@ -41,6 +49,10 @@ def set_kp_coverage(unit_list, paper):
 
 
 def set_adaptation_degree(unit_list, paper, fkpcov, fdiff):
+    """
+    计算种群的适应度
+    """
+
     set_kp_coverage(unit_list, paper)
     for i in range(len(unit_list)):
         unit_list[i].adaptation_degree = 1 - (1 - unit_list[i].kp_coverage) \
@@ -51,6 +63,10 @@ def set_adaptation_degree(unit_list, paper, fkpcov, fdiff):
 
 
 def generate_one_unit(i, paper, problem_list):
+    """
+    随机生成一个个体
+    """
+
     unit = Unit()
     unit.id = i + 1
 
@@ -75,6 +91,10 @@ def generate_one_unit(i, paper, problem_list):
 
 
 def generate_unit_list(count, paper, problem_list):
+    """
+    随机生成一个种群
+    """
+
     unit_list = []
     for i in range(count):
         unit = generate_one_unit(i, paper, problem_list)
@@ -84,6 +104,10 @@ def generate_unit_list(count, paper, problem_list):
 
 
 def initial_population(count, paper, problem_list):
+    """
+    生成初始种群
+    """
+
     unit_list = generate_unit_list(count, paper, problem_list)
     set_kp_coverage(unit_list, paper)
     set_adaptation_degree(unit_list, paper, fkpcov, fdiff)
@@ -92,6 +116,10 @@ def initial_population(count, paper, problem_list):
 
 
 def roulette(unit_list, count):
+    """
+    轮盘赌算法实现自然选择过程
+    """
+
     selected_unit_list = []
     all_adaptation_degree = 0
     for u in unit_list:
@@ -113,11 +141,19 @@ def roulette(unit_list, count):
 
 
 def pick_best(unit_list):
+    """
+    每次选择保留最优个体
+    """
+
     best_unit = max(unit_list, key=lambda u: u.adaptation_degree)
     return best_unit
 
 
 def select(unit_list, count):
+    """
+    返回自然选择后的种群
+    """
+
     selected_unit_list = []
     selected_unit_list += roulette(unit_list, count - 1)
     selected_unit_list.append(pick_best(unit_list))
@@ -125,6 +161,10 @@ def select(unit_list, count):
 
 
 def cross(unit_list, count, paper):
+    """
+    基因重组
+    """
+
     crossed_unit_list = []
     while (len(crossed_unit_list) != count):
         index_one = randint(0, len(unit_list) - 1)
@@ -167,6 +207,10 @@ def cross(unit_list, count, paper):
 
 
 def change(unit_list, problem_list, paper):
+    """
+    变异
+    """
+
     index = 0
     for u in unit_list:
         p = random()
@@ -211,7 +255,6 @@ def show_unit(unit_list):
         print u"试卷编号\t知识点分布\t难度系数\t适应度"
         print u"%d\t\t%.2f\t\t%.2f\t\t%.2f" % (
                 u.id, u.kp_coverage, u.difficulty, u.adaptation_degree)
-
 
 
 def show_opt_unit(unit_list):
