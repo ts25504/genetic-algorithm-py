@@ -6,10 +6,10 @@ from db import DB
 from paper import Paper
 from unit import Unit
 
-fkpcov = 0.5
-fdiff = 0.5
-population_num = 100
-select_num = 30
+FKPCOV = 0.5 # 知识点覆盖率权重
+FDIFF = 0.5 # 试卷难度权重
+POPULATION_NUM = 100 # 种群个体数
+SELECT_NUM = 30 # 自然选择后的种群个体数
 
 
 def is_contain_points(paper, problem):
@@ -48,7 +48,7 @@ def set_kp_coverage(unit_list, paper):
     return unit_list
 
 
-def set_adaptation_degree(unit_list, paper, fkpcov, fdiff):
+def set_adaptation_degree(unit_list, paper, FKPCOV, FDIFF):
     """
     计算种群的适应度
     """
@@ -56,8 +56,8 @@ def set_adaptation_degree(unit_list, paper, fkpcov, fdiff):
     set_kp_coverage(unit_list, paper)
     for i in range(len(unit_list)):
         unit_list[i].adaptation_degree = 1 - (1 - unit_list[i].kp_coverage) \
-                * fkpcov - abs(unit_list[i].difficulty - paper.difficulty) \
-                * fdiff
+                * FKPCOV - abs(unit_list[i].difficulty - paper.difficulty) \
+                * FDIFF
 
     return unit_list
 
@@ -110,7 +110,7 @@ def initial_population(count, paper, problem_list):
 
     unit_list = generate_unit_list(count, paper, problem_list)
     set_kp_coverage(unit_list, paper)
-    set_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+    set_adaptation_degree(unit_list, paper, FKPCOV, FDIFF)
 
     return unit_list
 
@@ -202,7 +202,7 @@ def cross(unit_list, count, paper):
         crossed_unit_list = list(set(crossed_unit_list))
 
     set_kp_coverage(crossed_unit_list, paper)
-    set_adaptation_degree(crossed_unit_list, paper, fkpcov, fdiff)
+    set_adaptation_degree(crossed_unit_list, paper, FKPCOV, FDIFF)
     return crossed_unit_list
 
 
@@ -227,7 +227,7 @@ def change(unit_list, problem_list, paper):
                 u.problem_list[index] = small_db[change_index]
 
     set_kp_coverage(unit_list, paper)
-    set_adaptation_degree(unit_list, paper, fkpcov, fdiff)
+    set_adaptation_degree(unit_list, paper, FKPCOV, FDIFF)
     return unit_list
 
 
@@ -281,7 +281,7 @@ class Genetic:
     def run(self, expand):
         count = 1
         run_count = 500
-        unit_list = initial_population(population_num,
+        unit_list = initial_population(POPULATION_NUM,
                                        self.paper,
                                        self.db.problem_db)
 
@@ -289,8 +289,8 @@ class Genetic:
             count = count + 1
             if (count > run_count):
                 break
-            unit_list = select(unit_list, select_num)
-            unit_list = cross(unit_list, population_num, self.paper)
+            unit_list = select(unit_list, SELECT_NUM)
+            unit_list = cross(unit_list, POPULATION_NUM, self.paper)
             if (is_end(unit_list, expand)):
                 break
 
@@ -313,7 +313,7 @@ class Genetic:
 
         while True:
             count = 1
-            unit_list = initial_population(population_num,
+            unit_list = initial_population(POPULATION_NUM,
                                            self.paper,
                                            self.db.problem_db)
 
@@ -329,8 +329,8 @@ class Genetic:
                     print u"失败，请重新设计条件"
                     break
 
-                unit_list = select(unit_list, select_num)
-                unit_list = cross(unit_list, population_num, self.paper)
+                unit_list = select(unit_list, SELECT_NUM)
+                unit_list = cross(unit_list, POPULATION_NUM, self.paper)
 
                 if (is_end(unit_list, expand)):
                     break
