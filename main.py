@@ -6,10 +6,10 @@ from db import DB
 from paper import Paper
 from unit import Unit
 
-FKPCOV = 0.5 # 知识点覆盖率权重
-FDIFF = 0.5 # 试卷难度权重
-POPULATION_NUM = 100 # 种群个体数
-SELECT_NUM = 30 # 自然选择后的种群个体数
+FKPCOV = 0.5  # 知识点覆盖率权重
+FDIFF = 0.5  # 试卷难度权重
+POPULATION_NUM = 100  # 种群个体数
+SELECT_NUM = 30  # 自然选择后的种群个体数
 
 
 def is_contain_points(paper, problem):
