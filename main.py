@@ -71,7 +71,6 @@ def generate_one_unit(i, paper, problem_list):
     unit.id = i + 1
 
     each_type_count = paper.each_type_count
-    print problem_list
     while paper.total_score != unit.sum_score:
         unit.problem_list = []
         for j in range(len(each_type_count)):
