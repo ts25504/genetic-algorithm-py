@@ -139,13 +139,17 @@ def roulette(unit_list, count):
     return selected_unit_list
 
 
-def pick_best(unit_list):
+def pick_best(unit_list, selected_unit_list):
     """
     每次选择保留最优个体
     """
 
     best_unit = max(unit_list, key=lambda u: u.adaptation_degree)
-    return best_unit
+    worst_unit = min(selected_unit_list, key=lambda u: u.adaptation_degree)
+
+    if not best_unit in selected_unit_list:
+        selected_unit_list.append(best_unit)
+        selected_unit_list.remove(worst_unit)
 
 
 def select(unit_list, count):
@@ -154,8 +158,9 @@ def select(unit_list, count):
     """
 
     selected_unit_list = []
-    selected_unit_list += roulette(unit_list, count - 1)
-    selected_unit_list.append(pick_best(unit_list))
+    selected_unit_list += roulette(unit_list, count)
+    pick_best(unit_list, selected_unit_list)
+
     return selected_unit_list
 
 
